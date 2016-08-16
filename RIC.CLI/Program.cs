@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RIC.CLI.Models;
 using RIC.CLI.Models.Redmine;
@@ -41,10 +37,6 @@ namespace RIC.CLI
             sb.Append("\t1. Edit settings.xml.\n");
             sb.Append("\t\tInput a API Access Key to Key Field.\n");
             sb.Append("\t\tInput a Project Name to ProjectName Field.\n");
-            sb.Append("\n");
-            sb.Append("\t2. Drop a csv file.\n");
-            sb.Append("\t\tCSV columns are story name, task name, done and hours.\n");
-            sb.Append("\t\tstory name should input issue no. (e.g. #123456)\n");
             sb.Append("\n");
             sb.Append("Press Enter to continue.\n");
             Console.WriteLine(sb.ToString());
@@ -111,11 +103,7 @@ namespace RIC.CLI
 
 
             var cmd = args[0];
-            if (cmd == "/register-sbl")
-            {
-                RegisterSprintBacklog(args[1]);
-            }
-            else if (cmd == "/get-remain-hours")
+            if (cmd == "/get-remain-hours")
             {
                 if (args.Length <= 1)
                 {
@@ -156,48 +144,6 @@ namespace RIC.CLI
                 Console.WriteLine("Sum hours is " + res.ToString() + " h");
                 PauseIfDebug();
                 Environment.Exit(0);
-            }
-        }
-
-        static void RegisterSprintBacklog(string sblPath)
-        {
-            Debug.WriteLine("チケットへの登録を開始します.");
-            Console.WriteLine("Start post to issue.");
-            try
-            {
-                // CSV読み込み
-                var csv = new CsvHelper.CsvReader(new StreamReader(File.OpenRead(sblPath), Encoding.GetEncoding("shift_jis")));
-                csv.Configuration.RegisterClassMap(new CsvMap());
-                var records = csv.GetRecords<SprintBacklog>().ToList();
-
-                // リクエスト作成
-                var requestBodyList = records.ConvertAll(record =>
-                {
-                    var body = IssueDefaultSetter.SetupDefault(new TicketPostRequestBody
-                    {
-                        Issue = new RIC.CLI.Models.Issue
-                        {
-                            ParentIssueId = int.Parse(record.StoryName),
-                            Subject = record.TaskName,
-                            Description = record.Done,
-                            EstimatedHours = float.Parse(record.Hours.ToLower().Replace("h", "")),
-                        }
-                    });
-                    return body;
-                });
-
-                // チケット登録
-                var tasks = new List<Task>();
-                requestBodyList.ForEach(record => tasks.Add(RedmineApi.PostIssueAsync(record)));
-                Task.WaitAll(tasks.ToArray(), Properties.Settings.Default.TaskMillisecondsTimeout);
-            }
-            catch (FileNotFoundException)
-            {
-                Debug.WriteLine(string.Format("指定したファイルが見つかりません. {0}", sblPath));
-                Console.WriteLine(string.Format("File Not Found. {0}", sblPath));
-                Console.WriteLine("Press Enter to continue");
-                Console.ReadLine();
-                Environment.Exit(1);
             }
         }
 

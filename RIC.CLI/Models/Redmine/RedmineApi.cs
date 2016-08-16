@@ -22,23 +22,6 @@ namespace RIC.CLI.Models.Redmine
     };
 
     /// <summary>
-    /// Issue Default Value Setter
-    /// </summary>
-    public class IssueDefaultSetter
-    {
-        public static TicketPostRequestBody SetupDefault(TicketPostRequestBody body)
-        {
-            body.Issue.ProjectId = Consts.ProjectName;
-            body.Issue.WatcherUserIds = "204,543";
-            body.Issue.AssignedToId = "204";
-            body.Issue.CustomFieldValues = new Dictionary<string, string> { 
-                {"30", "管理ツール"}, // 対応チーム                
-            };
-            return body;
-        }
-    }
-
-    /// <summary>
     /// Issue 取得リクエスト用パラメータ
     /// </summary>
     public class IssueGetRequestParams
